@@ -4,3 +4,8 @@
 
 ### timelines:
 1. Be familiar with the basic steps by 7.31
+reference: https://homes.cs.washington.edu/~todorov/courses/cseP590/16_ParticleFilter.pdf
+
+2. Dynamic Model
+
+3. Observation Model
