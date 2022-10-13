@@ -72,7 +72,7 @@ class particle_filter{
         Eigen::Affine3f last_pose_;
         vector<float> scan_x_; // x coordinate in meters in robot frame
         vector<float> scan_y_; // y coordiante in meters in robot frame
-    
+        
     public:
         particle_filter(){
         }
@@ -137,7 +137,7 @@ class particle_filter{
         void update_weights(vector<float> &observ_log_prob){
             for(int i =0; i<n_; i++){
                 float log_weight =std::log(weights_[i]) + observ_log_prob[i];
-                weights_[i] = std::(log_weight);
+                weights_[i] = std::exp(log_weight);
             }
         }
 
@@ -169,21 +169,38 @@ class particle_filter{
         }
 
         void stratified_resampling(){
-            // compute the sum of weights
+            // compute cumulative sum
             float sum_weights = 0;
+            vector<float> cum_sum;
             for(int i = 0; i<n_; i++){
                 sum_weights += weights_[i];
+                cum_sum.push_back(sum_weights);
             }
             // normalize the weights
             vector<float> normalized_weights;
             for(int i = 0; i<n_; i++){
-                normalized_weights.push_back(weights_[i]/sum_weights);
+                normalized_weights.push_back(cum_sum[i]/sum_weights);
             }
             // generate random numbers
-
-
+            vector<float> random_nums;
+            for(int i = 0; i<n_; i++){
+                random_nums[i] = (i + std::rand()/std::RAND_MAX)/n_;
+            }
+            vector<Eigen::Affine3f> new_particles;
+            int index = 0;
+            int sample = 0;
+            while(sample<n_){
+                while(cum_sum[index]<random_nums[sample]){
+                    index++;
+                }
+                new_particles[sample] = particles_[index];
+                sample++;
+            }
+            particles_ = new_particles;
+            for(int i = 0; i<n_; i++){
+                weights_[i] = 1./n_;
+            }
         }
-
         void resample_particels(){
             // compute the the sum of squares of weights
             float sum_weight_squares = 0;
@@ -196,7 +213,6 @@ class particle_filter{
                 ROS_INFO_STREAM("Resampling.....");
                 stratified_resampling();
             }
-            
         }
 };
 
